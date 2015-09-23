@@ -41,9 +41,9 @@ abstract class Signature
 		return '/' . str_replace('%2F', '/', $doubleEncoded);
 	}
 
-	protected function createStringToSign($longDate, $creq)
+	protected function createStringToSign($longDate, $requestContext)
 	{
-		$hash = hash($this->getHashAlgorithm(), $creq);
+		$hash = hash($this->getHashAlgorithm(), $requestContext);
 
 		return self:: AUTH_VERSION_SIGNATURE . strtoupper($this->getHashAlgorithm()) . strtoupper($this->getHashAlgorithm()) . "\n{$longDate}\n{$hash}";
 	}
@@ -110,7 +110,7 @@ abstract class Signature
 			. $signedHeadersString . "\n"
 			. $payload;
 
-		return ['creq' => $canon, 'headers' => $signedHeadersString];
+		return ['requestContext' => $canon, 'headers' => $signedHeadersString];
 	}
 
 	protected function getSigningKey($shortDate, $secretKey)

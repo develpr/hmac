@@ -1,21 +1,19 @@
 <?php namespace Develpr\Hmac;
 
 use Develpr\Hmac\Contracts\Credentialed;
+use Develpr\Hmac\Exceptions\ExpiredRequestTimestampException;
 use Symfony\Component\HttpFoundation\Request;
 use Develpr\Hmac\Contracts\Credentials;
 use GuzzleHttp\Psr7;
 
 
-class SignatureVerify extends Signature
+class RequestVerifier extends Signature
 {
-
 	public function checkRequest(Request $request, Credentialed $credentialed)
 	{
 		$originalAuthData = $this->retrieveOriginalAuthData($request);
 
 		$originalDate = $this->retrieveOriginalDate($request);
-
-		$currentDate = gmdate(self::ISO8601_BASIC);
 
 		$shortDate = substr($originalDate, 0, 8);
 
@@ -26,7 +24,9 @@ class SignatureVerify extends Signature
 
 		$payload = $this->getPayload($request);
 		$context = $this->createContext($parsed, $payload);
-		$toSign = $this->createStringToSign($originalDate, $context['creq']);
+
+		$toSign = $this->createStringToSign($originalDate, $context['requestContext']);
+
 		$signingKey = $this->getSigningKey(
 				$shortDate,
 				$credentials->getSecretKey()
@@ -39,8 +39,10 @@ class SignatureVerify extends Signature
 
 	private function getSignatureIngredients(Request $request, array $originalHeaders)
 	{
-
-		$headers = array_intersect_key($request->headers->all(), array_flip((array) $originalHeaders));
+		//This looks a bit ugly, but we're just making sure we're only grabbing the headers that were originally considered
+		//when the request was signed. Other headers may have been added at various times in the request lifecycle, and
+		//we don't want to check these!
+		$headers = array_intersect_key(array_change_key_case($request->headers->all(), CASE_LOWER), array_flip((array) array_map('strtolower', $originalHeaders)));
 
 		$uri = $request->getUri();
 		$path = $request->getPathInfo();
@@ -60,13 +62,10 @@ class SignatureVerify extends Signature
 	protected function getPayload(Request $request)
 	{
 		$ctx = hash_init($this->getHashAlgorithm());
-
 		hash_update($ctx, $request->getContent());
-
 		$out = hash_final($ctx);
 
 		return $out;
-
 	}
 
 	/**
@@ -78,7 +77,8 @@ class SignatureVerify extends Signature
 	 */
 	private function retrieveOriginalAuthData(Request $request)
 	{
-		$authHeader = $request->headers->get('X-' . $this->getHeaderNamespace() .'-Authorization');
+		//note: header names are case insensitive but this method will ignore case
+		$authHeader = $request->headers->get($this->getAuthHeaderName());
 
 		if(! $authHeader )
 		{
@@ -98,7 +98,7 @@ class SignatureVerify extends Signature
 												match to prevent false-negatives.");
 		}
 
-		$authHeader = str_replace(self::AUTH_VERSION_SIGNATURE, '', $authHeader);
+		$authHeader = str_replace($this->getSignature(), '', $authHeader);
 		$splitHeaders = array_map('trim', explode(',', $authHeader));
 		$result = [];
 		for($i = 0; $i < count($splitHeaders); $i++){
@@ -119,6 +119,10 @@ class SignatureVerify extends Signature
 			throw new \InvalidArgumentException("No X-" . $this->getHeaderNamespace() . "-Date header was provided. \n
 			   									Expected X-" . $this->getHeaderNamespace() . "-Date. Without this header it's not\n
 												possible to verify the request because there is no signing information.");
+		}
+
+		if($this->shouldCheckRequestAge() && (strtotime(gmdate(self::ISO8601_BASIC)) - strtotime($date) > $this->maxRequestAge())){
+			throw new ExpiredRequestTimestampException($this->maxRequestAge());
 		}
 
 		return $date;

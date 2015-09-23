@@ -18,11 +18,17 @@
   },
   "require-dev": {
     "phpunit/phpunit": "~4.0",
+    "mockery/mockery": "~0.9.1",
     "symfony/http-foundation": "2.7.*"
   },
   "autoload": {
     "psr-4": {
-      "Develpr\\Hmac": "src/"
+      "Develpr\\Hmac\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Develpr\\Tests\\": "tests"
     }
   }
 }
