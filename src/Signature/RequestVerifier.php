@@ -135,7 +135,7 @@ class RequestVerifier extends Signature
 			   									Expected X-" . $this->getHeaderNamespace() . "-Date. Without this header it's not\n
 												possible to verify the request because there is no signing information.");
 		}
-
+		
 		if($this->shouldCheckRequestAge() && (strtotime(gmdate(self::ISO8601_BASIC)) - strtotime($date) > $this->maxRequestAge())){
 			throw new ExpiredRequestTimestampException($this->maxRequestAge());
 		}
