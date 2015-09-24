@@ -1,6 +1,6 @@
 <?php namespace Develpr\Hmac\Signature;
 
-use Develpr\Hmac\Contracts\Credentials;
+use Develpr\Hmac\Contracts\Credential;
 use Develpr\Hmac\Exceptions\CouldNotCreateChecksumException;
 use GuzzleHttp\Psr7;
 use GuzzleHttp\Psr7\Request as GuzzleRequest;
@@ -12,10 +12,10 @@ class RequestSigner extends Signature
 	 * Sign a request
 	 *
 	 * @param RequestInterface $request
-	 * @param Credentials $credentials
+	 * @param Credential $credentials
 	 * @return Psr7\Request
 	 */
-	public function sign(RequestInterface $request, Credentials $credentials) {
+	public function sign(RequestInterface $request, Credential $credential) {
 
 		//The current date/time to be used in the signature, and also (optionally) used by the verifier to protect
 		//against replay attacks
@@ -37,12 +37,12 @@ class RequestSigner extends Signature
 
 		$signingKey = $this->getSigningKey(
 				$shortDate,
-				$credentials->getSecretKey()
+				$credential->getSecretKey()
 		);
 		$signature = hash_hmac($this->getHashAlgorithm(), $toSign, $signingKey);
 		$parsed['headers'][$this->getAuthHeaderName()] = [
 				$this->getSignature() . " "
-				. "Credential={$credentials->getAccessKeyId()}, "
+				. "Credential={$credential->getAccessKeyId()}, "
 				. "SignedHeaders={$context['headers']}, "
 				. "Signature={$signature}"
 		];

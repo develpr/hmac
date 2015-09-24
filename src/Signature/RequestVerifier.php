@@ -1,15 +1,22 @@
 <?php namespace Develpr\Hmac\Signature;
 
-use Develpr\Hmac\Contracts\Credentialed;
+use Develpr\Hmac\Contracts\Credential;
+use Develpr\Hmac\Exceptions\CredentialNotProvidedException;
 use Develpr\Hmac\Exceptions\ExpiredRequestTimestampException;
 use Symfony\Component\HttpFoundation\Request;
-use Develpr\Hmac\Contracts\Credentials;
+use Develpr\Hmac\Contracts\CredentialProvider;
 use GuzzleHttp\Psr7;
 
 
 class RequestVerifier extends Signature
 {
-	public function checkRequest(Request $request, Credentialed $credentialed)
+	/**
+	 * @param Request $request
+	 * @param CredentialProvider $credentialProvider
+	 * @return CredentialProvider|null
+	 * @throws ExpiredRequestTimestampException
+	 */
+	public function checkRequest(Request $request, CredentialProvider $credentialProvider)
 	{
 		$originalAuthData = $this->retrieveOriginalAuthData($request);
 
@@ -17,8 +24,12 @@ class RequestVerifier extends Signature
 
 		$shortDate = substr($originalDate, 0, 8);
 
-		/** @var Credentials $credentials */
-		$credentials = $credentialed->getCredentials($originalAuthData['Credential']);
+		/** @var Credential $credential */
+		$credential = $credentialProvider->getCredential($originalAuthData['Credential']);
+
+		if(! $credential ){
+			throw new CredentialNotProvidedException($originalAuthData['Credential']);
+		}
 
 		$parsed = $this->getSignatureIngredients($request, $originalAuthData['SignedHeaders']);
 
@@ -29,12 +40,16 @@ class RequestVerifier extends Signature
 
 		$signingKey = $this->getSigningKey(
 				$shortDate,
-				$credentials->getSecretKey()
+				$credential->getSecretKey()
 		);
 
 		$computedSignature = hash_hmac($this->getHashAlgorithm(), $toSign, $signingKey);
 
-		return $originalAuthData['Signature'] === $computedSignature;
+		if($originalAuthData['Signature'] === $computedSignature){
+			return $credential;
+		}else{
+			return false;
+		}
 	}
 
 	private function getSignatureIngredients(Request $request, array $originalHeaders)

@@ -1,5 +1,4 @@
-<?php
-namespace Develpr\Hmac\Exceptions;
+<?php namespace Develpr\Hmac\Exceptions;
 
 class CouldNotCreateChecksumException extends \RuntimeException
 {

@@ -4,12 +4,11 @@
  * Interface Credentialed
  * @package Develpr\Hmac\Contracts
  */
-interface Credentialed
+interface CredentialProvider
 {
 	/**
 	 * @param string $accessKeyId the unique id - should be able to find secret key from this
-	 * @return Credentials
+	 * @return Credential
 	 */
-	public function getCredentials($accessKeyId = null);
-
+	public function getCredential($accessKeyId);
 }

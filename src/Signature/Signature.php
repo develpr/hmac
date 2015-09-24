@@ -1,4 +1,6 @@
 <?php namespace Develpr\Hmac\Signature;
+use Develpr\Hmac\Exceptions\CredentialNotProvidedException;
+use Develpr\Hmac\Exceptions\InvalidSecretKeyException;
 
 /**
  *
@@ -116,6 +118,9 @@ abstract class Signature
 
 	protected function getSigningKey($shortDate, $secretKey)
 	{
+		if( ! $secretKey ){
+			throw new InvalidSecretKeyException;
+		}
 		$k = $shortDate . '_' . $secretKey;
 
 		if (!isset($this->cache[$k])) {
