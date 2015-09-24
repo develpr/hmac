@@ -1,4 +1,4 @@
-<?php namespace Develpr\Hmac;
+<?php namespace Develpr\Hmac\Signature;
 
 use Develpr\Hmac\Contracts\Credentialed;
 use Develpr\Hmac\Exceptions\ExpiredRequestTimestampException;

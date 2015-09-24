@@ -1,8 +1,9 @@
-<?php namespace Develpr\Hmac;
+<?php namespace Develpr\Hmac\Signature;
 
 use Develpr\Hmac\Contracts\Credentials;
 use Develpr\Hmac\Exceptions\CouldNotCreateChecksumException;
 use GuzzleHttp\Psr7;
+use GuzzleHttp\Psr7\Request as GuzzleRequest;
 use Psr\Http\Message\RequestInterface;
 
 class RequestSigner extends Signature
@@ -14,7 +15,7 @@ class RequestSigner extends Signature
 	 * @param Credentials $credentials
 	 * @return Psr7\Request
 	 */
-	public function sign(Psr7\Request $request, Credentials $credentials) {
+	public function sign(RequestInterface $request, Credentials $credentials) {
 
 		//The current date/time to be used in the signature, and also (optionally) used by the verifier to protect
 		//against replay attacks

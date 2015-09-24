@@ -1,13 +1,14 @@
-<?php namespace Develpr\Hmac;
+<?php namespace Develpr\Hmac\Signature;
 
 /**
+ *
  * Based on AWS Signature Version 4
  * @link http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
  */
 abstract class Signature
 {
 	const ISO8601_BASIC = 'Ymd\THis\Z';
-	const  AUTH_VERSION_SIGNATURE = 'DEVELPR4-HMAC-';
+	const AUTH_VERSION_SIGNATURE = 'DEVELPR4-HMAC-';
 
 	const DEFAULT_HEADER_NAMESPACE = 'Develpr';
 	const DEFAULT_AUTH_HEADER_NAME = 'Authorization';
